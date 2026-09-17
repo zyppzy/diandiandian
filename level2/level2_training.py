@@ -46,6 +46,7 @@ class cnn(nn.Module):
         #分类马，最终输出0-9中的数字
         self.classifier=nn.Sequential(
             nn.Flatten(),
+            #一张图片变成64个7*7的特征图，一共3136个数值表示一张图片
             nn.Linear(64*7*7,128),nn.ReLU(),
             #随机关闭一半的神经元，防止过拟合
             nn.Dropout(p=0.3),

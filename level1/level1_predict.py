@@ -46,7 +46,7 @@ def predict_image(image_path, model_path=MODEL_PATH):
     model=mlp()
 
     try:
-        model.load_state_dict(torch.load(model_path, map_location='cpu'))
+        model.load_state_dict(torch.load(model_path, map_location='cpu', weights_only=False))
         print(f"Loaded model from: {model_path}")
     except FileNotFoundError:
         print(f"Model file '{model_path}' not found. ")
