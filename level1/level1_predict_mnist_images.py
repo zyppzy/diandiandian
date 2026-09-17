@@ -28,21 +28,46 @@ class mlp(nn.Module):
         return self.layers(x)
 
 
-def get_mnist_test_loader(batch_size=64):
+def get_mnist_test_loader(batch_size=64, num_samples=None):
     transform = transforms.Compose([
         transforms.ToTensor(),
         transforms.Normalize((0.1307,), (0.3081,)),
         transforms.Lambda(lambda x: torch.flatten(x))
     ])
     test_dataset = datasets.MNIST(root=DATA_DIR, train=False, transform=transform, download=True)
+
+    if num_samples is not None:
+        num_samples = min(num_samples, len(test_dataset))
+        test_dataset = torch.utils.data.Subset(test_dataset, list(range(num_samples)))
+
     return DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
 
-def show_predictions():
-    os.makedirs(OUTPUT_DIR, exist_ok=True)
-
+def evaluate_accuracy(num_samples=1000, batch_size=64):
     model = mlp()
-    model.load_state_dict(torch.load(MODEL_PATH, map_location='cpu'))
+    model.load_state_dict(torch.load(MODEL_PATH, map_location='cpu', weights_only=False))
+    model.eval()
+
+    loader = get_mnist_test_loader(batch_size=batch_size, num_samples=num_samples)
+
+    correct = 0
+    total = 0
+
+    with torch.no_grad():
+        for images, labels in loader:
+            outputs = model(images)
+            preds = torch.argmax(outputs, dim=1)
+            correct += (preds == labels).sum().item()
+            total += labels.size(0)
+
+    accuracy = correct / total if total > 0 else 0.0
+    print(f"Accuracy on {total} test samples: {accuracy:.4f} ({correct}/{total})")
+    return accuracy
+
+
+def show_predictions():
+    model = mlp()
+    model.load_state_dict(torch.load(MODEL_PATH, map_location='cpu', weights_only=False))
     model.eval()
 
     loader = get_mnist_test_loader(batch_size=1)
@@ -57,26 +82,10 @@ def show_predictions():
         pred = torch.argmax(output, dim=1).item()
         true_label = labels.item()
         prob = torch.softmax(output, dim=1)[0][pred].item()
-
-        image = images[0].clone().reshape(28, 28)
-        img = image.numpy()
-
         print(f"sample {idx}: true={true_label}, pred={pred}, confidence={prob:.4f}")
-
-        plt.figure(figsize=(2, 2))
-        plt.imshow(img, cmap='gray')
-        plt.title(f'true={true_label}, pred={pred}', fontsize=8)
-        plt.axis('off')
-
-        save_path = os.path.join(OUTPUT_DIR, f'mnist_sample_{idx}.png')
-        plt.savefig(save_path, dpi=200, bbox_inches='tight')
-        plt.close()
-
-        print(f"saved image: {save_path}")
-
-    print(f"All sample images saved in: {OUTPUT_DIR}")
 
 
 if __name__ == "__main__":
+    evaluate_accuracy(num_samples=1000, batch_size=64)
     show_predictions()  
 
