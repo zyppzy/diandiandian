@@ -7,8 +7,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.dirname(BASE_DIR)
 MODEL_PATH = os.path.join(BASE_DIR, 'mlp_model.pth')
-TEST_IMAGES_DIR = os.path.join(BASE_DIR, 'test_images')
+TEST_IMAGES_DIR = os.path.join(PROJECT_ROOT, 'test_images')
 
 class mlp(nn.Module):
     def __init__(self):

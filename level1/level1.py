@@ -8,8 +8,9 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.dirname(BASE_DIR)
 MODEL_PATH = os.path.join(BASE_DIR, 'mlp_model.pth')
-DATA_DIR = os.path.join(BASE_DIR, 'data')
+DATA_DIR = os.path.join(PROJECT_ROOT, 'data')
 
 #定义对图片的加工流程
 #ToTenser()将图片转化为张量，将0-255的像素值转化为0-1之间的浮点数
