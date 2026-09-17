@@ -48,7 +48,7 @@ class cnn(nn.Module):
             nn.Flatten(),
             nn.Linear(64*7*7,128),nn.ReLU(),
             #随机关闭一半的神经元，防止过拟合
-            nn.Dropout(p=0.5),
+            nn.Dropout(p=0.3),
             nn.Linear(128,10)
         )
 
