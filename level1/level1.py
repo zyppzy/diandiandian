@@ -1,3 +1,4 @@
+import os
 import torch
 from torchvision import transforms,datasets
 from torch.utils.data import DataLoader
@@ -6,26 +7,33 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.dirname(BASE_DIR)
+MODEL_PATH = os.path.join(BASE_DIR, 'mlp_model.pth')
+DATA_DIR = os.path.join(PROJECT_ROOT, 'data')
+
 #定义对图片的加工流程
 #ToTenser()将图片转化为张量，将0-255的像素值转化为0-1之间的浮点数
+#同时进行 MNIST 标准化，保证训练和推理输入分布一致
 transform = transforms.Compose(
     [transforms.ToTensor(),
-     transforms.Lambda(lambda x: torch.flatten(x))]#此处的x用于承接已经转换为张量的数据
+     transforms.Normalize((0.1307,), (0.3081,)),
+     transforms.Lambda(lambda x: torch.flatten(x))],#此处的x用于承接已经转换为张量的数据
     )
 
 #下载训练集，使用定义过的transform对图片进行加工
-train_data=datasets.MNIST(root='./data',train=True,transform=transform,download=True)   
+train_data=datasets.MNIST(root=DATA_DIR,train=True,transform=transform,download=True)   
 
 #打包数据，同一批次输入64张图片的数据，并打乱
 train_loader=DataLoader(dataset=train_data,batch_size=64,shuffle=True)
 
 #检验
-"""
+
 images,labels=next(iter(train_loader))
 print(f"shape of images: {images.shape}")
 print(f"shape of labels: {labels.shape}")
 print(f"labels: {labels[:5]}")
-"""
+
 
 class mlp(nn.Module):
     def __init__(self):
@@ -53,7 +61,7 @@ criterion=nn.CrossEntropyLoss()
 optimizer=torch.optim.Adam(model.parameters(),lr=0.01)
 
 #训练循环
-num_epochs=10
+num_epochs=15
 loss_history=[]
 for epoch in range(num_epochs):
     model.train()
@@ -79,9 +87,12 @@ plt.plot(range(1, num_epochs + 1), loss_history, marker='o')
 plt.title('Model Training Loss Curve')
 plt.xlabel('Epoch')                    
 plt.ylabel('Loss')                    
-plt.grid(True)                     
-plt.savefig('loss_curve.png')          
+plt.grid(True)
+LOSS_PATH = os.path.join(BASE_DIR, 'loss_curve.png')
+plt.savefig(LOSS_PATH)
+print(f"Loss curve saved at: {LOSS_PATH}")
 
 #保存模型
-torch.save(model.state_dict(), 'mlp_model.pth')
-print("Model saved as 'mlp_model.pth'") 
+os.makedirs(BASE_DIR, exist_ok=True)
+torch.save(model.state_dict(), MODEL_PATH)
+print(f"Model saved at: {MODEL_PATH}")
