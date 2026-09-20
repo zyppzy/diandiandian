@@ -47,6 +47,7 @@ class ResNet(nn.Module):
         )
         #通道数逐渐翻倍，stride=2特征图尺寸减半
         self.layer1 = self._make_layer(block, 64, layers[0])
+        #从第二层开始降采样，输入stride=2，第一块stride=1
         self.layer2 = self._make_layer(block, 128, layers[1], stride=2)
         self.layer3 = self._make_layer(block, 256, layers[2], stride=2)
         self.layer4 = self._make_layer(block, 512, layers[3], stride=2)
@@ -69,6 +70,7 @@ class ResNet(nn.Module):
         layers.append(block(self.in_channels, out_channels, stride, downsample))
         self.in_channels = out_channels * block.expansion
         for _ in range(1, blocks):
+            #从这里进入basicblock循环次数是输入这个函数的数组中的次数
             layers.append(block(self.in_channels, out_channels))
 
         return nn.Sequential(*layers)
