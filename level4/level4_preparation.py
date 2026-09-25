@@ -1,16 +1,10 @@
 """
-数据预处理脚本（含输入图与对照图的配准对齐）。
-
-【本次修改】因为数据没有手写掩码（两图差异法失效），移除了掩码生成，
-只输出 input / clean 两个子目录，供训练直接使用。
-
+数据预处理脚本
 保留：
   - IMAGE_EXT 支持 .jpg
   - 保持长宽比缩放再裁剪（避免整页图压变形）
   - ORB+RANSAC 配准（--align，需要 opencv）
   - train/val 划分
-
-用法：
     python level4_preparation.py --size 256 --aug
     python level4_preparation.py --size 256 --align --aug   # 若 input/clean 存在旋转错位
 """

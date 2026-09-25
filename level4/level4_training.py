@@ -175,7 +175,7 @@ def train(args):
 
     optimizer = AdamW(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
     scheduler = CosineAnnealingLR(optimizer, T_max=args.epochs)
-    scaler = torch.cuda.amp.GradScaler(enabled=args.amp and device.type == "cuda")
+    scaler = torch.amp.GradScaler("cuda", enabled=args.amp and device.type == "cuda")
 
     save_dir = os.path.dirname(os.path.abspath(args.save))
     os.makedirs(save_dir, exist_ok=True)
@@ -193,7 +193,7 @@ def train(args):
         for inp, clean in train_loader:
             inp, clean = inp.to(device), clean.to(device)
             optimizer.zero_grad()
-            with torch.cuda.amp.autocast(enabled=args.amp and device.type == "cuda"):
+            with torch.amp.autocast("cuda", enabled=args.amp and device.type == "cuda"):
                 pred = model(inp)
                 loss, metrics = criterion(pred, clean)
             scaler.scale(loss).backward()
