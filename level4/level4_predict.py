@@ -99,7 +99,7 @@ def main():
     p.add_argument("--image", default=None)
     p.add_argument("--input-dir", default=None)
     p.add_argument("--out-dir", default="result")
-    p.add_argument("--tile", type=int, default=256)
+    p.add_argument("--tile", type=int, default=512)
     p.add_argument("--overlap", type=int, default=32)
     p.add_argument("--deskew", action="store_true")
     args = p.parse_args()

@@ -1,5 +1,13 @@
 """
-U-Net网络
+U-Net 网络结构（含通道注意力）。
+
+【本次修改】本任务为「文档增强 + 去除手写」，没有手写掩码标签，
+因此模型改为单输出：只输出一张干净图（回归），out_channals 默认 1。
+
+历史修复（保留）：
+  nn.model -> nn.Module；stride=3 -> kernel_size=3；去掉多余逗号；
+  self.comv/self.attnention 拼写；self.u4 重复定义；nn.Identity 缺括号；
+  删除未使用的 matplotlib/torchvision/DataLoader 导入。
 """
 
 import torch
@@ -113,3 +121,34 @@ class UNet(nn.Module):
         x = self.u3(x, x2)
         x = self.u4(x, x1)
         return self.out(x)
+
+
+class PatchDiscriminator(nn.Module):
+    """PatchGAN 判别器（用于对抗损失）。
+
+    输入是「输入图 + 待判图像」在通道维拼接（各 1 通道 -> 2 通道），
+    输出一个 NxN 的 patch 分数图：每个位置判断对应局部区域是否像「真实干净图」。
+    用 LeakyReLU + 逐步下采样，得到约 70x70 感受野的判别器（pix2pix 风格）。
+    """
+
+    def __init__(self, in_channels=2, base=64):
+        super().__init__()
+
+        def block(in_c, out_c, stride, norm):
+            layers = [nn.Conv2d(in_c, out_c, kernel_size=4, stride=stride, padding=1, bias=False)]
+            if norm:
+                layers.append(nn.BatchNorm2d(out_c))
+            layers.append(nn.LeakyReLU(0.2, inplace=True))
+            return layers
+
+        self.model = nn.Sequential(
+            *block(in_channels, base, 2, False),
+            *block(base, base * 2, 2, True),
+            *block(base * 2, base * 4, 2, True),
+            *block(base * 4, base * 8, 1, True),
+            nn.Conv2d(base * 8, 1, kernel_size=4, stride=1, padding=1),
+        )
+
+    def forward(self, input_img, target_img):
+        x = torch.cat([input_img, target_img], dim=1)
+        return self.model(x)
